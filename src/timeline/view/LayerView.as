@@ -1,5 +1,13 @@
 package timeline.view
 {
+	import timeline.util.Util;
+
+	import flash.display.DisplayObject;
+
+	import timeline.view.event.TimelineViewEvent;
+
+	import flash.events.MouseEvent;
+
 	import timeline.core.Frame;
 	import timeline.core.Layer;
 
@@ -8,6 +16,10 @@ package timeline.view
 	import flash.display.Sprite;
 	import flash.text.TextField;
 
+	[Event(name="MOUSE_DOWN_FRAME", type="timeline.view.event.TimelineViewEvent")]
+	[Event(name="MOUSE_UP_FRAME", type="timeline.view.event.TimelineViewEvent")]
+	[Event(name="MOUSE_OVER_FRAME", type="timeline.view.event.TimelineViewEvent")]
+	[Event(name="CLICK_LAYER", type="timeline.view.event.TimelineViewEvent")]
 	/**
 	 * @author tamt
 	 */
@@ -66,12 +78,74 @@ package timeline.view
 
 			this.selection_ui.x = this.framesContainer.x = this.frames_bg.x;
 			this.selection_ui.y = this.framesContainer.y = this.frames_bg.y;
+
+			this.framesContainer.mouseEnabled = this.framesContainer.mouseChildren = false;
+			this.frames_bg.mouseChildren = false;
+			this.title_tf.mouseEnabled = this.title_tf.selectable = this.title_tf.mouseWheelEnabled = false;
+
+			// 事件侦听
+			this.title_bg.addEventListener(MouseEvent.CLICK, layerMouseHandler);
+			this.frames_bg.addEventListener(MouseEvent.MOUSE_DOWN, framesMouseHandler);
+			this.frames_bg.addEventListener(MouseEvent.MOUSE_MOVE, framesMouseHandler);
+			this.frames_bg.addEventListener(MouseEvent.MOUSE_UP, framesMouseHandler);
+		}
+
+		override public function destroy() : void
+		{
+			if (this.frames_bg)
+			{
+				this.frames_bg.removeEventListener(MouseEvent.MOUSE_DOWN, framesMouseHandler);
+				this.frames_bg.removeEventListener(MouseEvent.MOUSE_MOVE, framesMouseHandler);
+				this.frames_bg.removeEventListener(MouseEvent.MOUSE_UP, framesMouseHandler);
+			}
+
+			if (this.title_bg)
+			{
+				this.title_bg.removeEventListener(MouseEvent.CLICK, layerMouseHandler);
+			}
+
+			super.destroy();
+		}
+
+		private function framesMouseHandler(event : MouseEvent) : void
+		{
+			event.stopImmediatePropagation();
+			switch(event.type)
+			{
+				case MouseEvent.MOUSE_DOWN:
+					dispatchEvent(new TimelineViewEvent(TimelineViewEvent.MOUSE_DOWN_FRAME));
+					break;
+				case MouseEvent.MOUSE_MOVE:
+					dispatchEvent(new TimelineViewEvent(TimelineViewEvent.MOUSE_MOVE_FRAME));
+					break;
+				case MouseEvent.MOUSE_UP:
+					dispatchEvent(new TimelineViewEvent(TimelineViewEvent.MOUSE_UP_FRAME));
+					break;
+				default:
+			}
+		}
+
+		private function layerMouseHandler(event : MouseEvent) : void
+		{
+			switch(event.type)
+			{
+				case MouseEvent.CLICK:
+					this.dispatchEvent(new TimelineViewEvent(TimelineViewEvent.CLICK_LAYER));
+					break;
+				default:
+			}
 		}
 
 		public function render() : void
 		{
 			//
 			this.title_tf.text = this.layer.name;
+			// color
+			if (this.outline_mc && this.outline_mc.fill_mc)
+			{
+				this.outline_mc.fill_mc.visible = !this.layer.outline;
+				(this.outline_mc.fill_mc as DisplayObject).transform.colorTransform = Util.getTintColorTransform(this.layer.color);
+			}
 
 			framesContainer.graphics.clear();
 
@@ -81,9 +155,9 @@ package timeline.view
 
 				// 绘制背景
 				var bgColor : int = (frame.elements && frame.elements.length) ? keyframeColor : blankKeyframeColor;
-				framesContainer.graphics.lineStyle(1, 0x0);
+				framesContainer.graphics.lineStyle(0, 0x0);
 				framesContainer.graphics.beginFill(bgColor, 0);
-				framesContainer.graphics.drawRect(frame.startFrame * _frameW, 0, frame.duration * _frameW, _frameH);
+				framesContainer.graphics.drawRect(frame.startFrame * _frameW, 0, frame.duration * _frameW, _frameH - .5);
 				framesContainer.graphics.endFill();
 
 				// 绘制关键帧起始帧标记(圆形)

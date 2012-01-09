@@ -12,7 +12,7 @@ package timeline.core
 	 */
 	public class Layer
 	{
-		private var _color : String;
+		private var _color : int;
 		private var _frames : Vector.<Frame> = new Vector.<Frame>();
 		private var _height : int;
 		private var _layerType : String = EnumLayerType.NORMAL;
@@ -27,6 +27,7 @@ package timeline.core
 		{
 			this.name = name;
 			this.layerType = layerType;
+			this.color = Util.getRandom256Color();
 		}
 
 		/**
@@ -37,7 +38,7 @@ package timeline.core
 		 * @productversion Flash MX 2004。
 		 * @see http://help.adobe.com/zh_CN/flash/cs/extend/WS5b3ccc516d4fbf351e63e3d118a9024f3f-7a41.html
 		 */
-		public function get color() : String
+		public function get color() : int
 		{
 			return _color;
 		}
@@ -50,7 +51,7 @@ package timeline.core
 		 * @productversion Flash MX 2004。
 		 * @see http://help.adobe.com/zh_CN/flash/cs/extend/WS5b3ccc516d4fbf351e63e3d118a9024f3f-7a41.html
 		 */
-		public function set color(value : String) : void
+		public function set color(value : int) : void
 		{
 			_color = value;
 		}
@@ -462,7 +463,6 @@ package timeline.core
 		 */
 		public function convertToKeyframes(startFrameIndex : int, endFrameIndex : int) : void
 		{
-			trace("[Layer.convertToKeyframes(startFrameIndex, endFrameIndex)]:", startFrameIndex, endFrameIndex);
 			this.coreConvertToKeyframes(startFrameIndex, endFrameIndex);
 		}
 
@@ -546,7 +546,6 @@ package timeline.core
 		 */
 		public function insertFrames(numFrames : int, frameNumIndex : int) : void
 		{
-			trace("[Layer.insertFrames(numFrames, frameNumIndex)]:", numFrames, frameNumIndex);
 			if (frameNumIndex >= this.frameCount)
 			{
 				this.appendsToFrameIndex(frameNumIndex);

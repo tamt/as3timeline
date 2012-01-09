@@ -1,18 +1,17 @@
 package timeline.view
 {
-	import flash.events.Event;
-	import flash.ui.Keyboard;
-	import flash.events.KeyboardEvent;
-	import flash.display.Shape;
-	import flash.geom.Rectangle;
-
+	import timeline.view.event.TimelineViewEvent;
 	import timeline.core.Layer;
 
 	import flash.display.DisplayObject;
 	import flash.display.MovieClip;
 	import flash.display.SimpleButton;
 	import flash.display.Sprite;
+	import flash.events.Event;
+	import flash.events.KeyboardEvent;
 	import flash.events.MouseEvent;
+	import flash.geom.Rectangle;
+	import flash.ui.Keyboard;
 
 	/**
 	 * 时间轴视图
@@ -82,6 +81,11 @@ package timeline.view
 			this.outline_btn.addEventListener(MouseEvent.CLICK, buttonHandler);
 			this.newLayer_btn.addEventListener(MouseEvent.CLICK, buttonHandler);
 			this.deleteLayer_btn.addEventListener(MouseEvent.CLICK, buttonHandler);
+			this.play_btn.addEventListener(MouseEvent.CLICK, buttonHandler);
+			this.preFrame_btn.addEventListener(MouseEvent.CLICK, buttonHandler);
+			this.firstFrame_btn.addEventListener(MouseEvent.CLICK, buttonHandler);
+			this.nextFrame_btn.addEventListener(MouseEvent.CLICK, buttonHandler);
+			this.lastFrame_btn.addEventListener(MouseEvent.CLICK, buttonHandler);
 
 			//
 			if (this.mediator.timeline)
@@ -192,6 +196,21 @@ package timeline.view
 						this.mediator.selectLayer(this.mediator.timeline.currentLayer);
 					}
 					break;
+				case this.play_btn:
+					this.mediator.startPlay();
+					break;
+				case this.nextFrame_btn:
+					this.mediator.nextFrame();
+					break;
+				case this.preFrame_btn:
+					this.mediator.prevFrame();
+					break;
+				case this.lastFrame_btn:
+					this.mediator.lastFrame();
+					break;
+				case this.firstFrame_btn:
+					this.mediator.firstFrame();
+					break;
 				default:
 			}
 		}
@@ -214,30 +233,36 @@ package timeline.view
 			var view : LayerView = new LayerView(this.mediator.timeline.layers[layer], layerUI, mediator);
 			layerViews.push(view);
 			layerContainer.addChild(layerUI);
-			layerUI.addEventListener(MouseEvent.MOUSE_DOWN, layerMouseHandler);
-			layerUI.addEventListener(MouseEvent.MOUSE_MOVE, layerMouseHandler);
-			layerUI.addEventListener(MouseEvent.MOUSE_UP, layerMouseHandler);
+			view.addEventListener(TimelineViewEvent.CLICK_LAYER, layerMouseHandler);
+			view.addEventListener(TimelineViewEvent.MOUSE_DOWN_FRAME, layerMouseHandler);
+			view.addEventListener(TimelineViewEvent.MOUSE_UP_FRAME, layerMouseHandler);
+			view.addEventListener(TimelineViewEvent.MOUSE_MOVE_FRAME, layerMouseHandler);
 
 			this.relayoutLayers();
 		}
 
-		private function layerMouseHandler(event : MouseEvent) : void
+		private function layerMouseHandler(event : TimelineViewEvent) : void
 		{
-			var ui : MovieClip = (event.currentTarget as MovieClip);
-			var view : LayerView = this.getLayerViewByUI(ui);
+			var view : LayerView = event.currentTarget as LayerView;
 			if (view)
 			{
 				switch(event.type)
 				{
-					case MouseEvent.MOUSE_DOWN:
+					case TimelineViewEvent.CLICK_LAYER:
+						this.mediator.stopPlay();
+						this.mediator.selectLayer(this.mediator.timeline.layers.indexOf(view.layer));
+						break;
+					case TimelineViewEvent.MOUSE_DOWN_FRAME:
 						if (!this.selection) this.selection = new Rectangle();
 						this.selection.x = view.frameIndexAtMouse;
 						if (this.selection.x < 0) this.selection.x = 0;
 						this.selection.y = this.mediator.timeline.layers.indexOf(view.layer);
 						if (this.selection.y < 0) this.selection.y = 0;
 						if (this.selection.y >= this.mediator.timeline.layerCount) this.selection.y = this.mediator.timeline.layerCount;
+						//
+						this.mediator.stopPlay();
 						break;
-					case MouseEvent.MOUSE_MOVE:
+					case TimelineViewEvent.MOUSE_MOVE_FRAME:
 						if (this.selection)
 						{
 							this.selection.right = view.frameIndexAtMouse;
@@ -248,7 +273,7 @@ package timeline.view
 							showSelection();
 						}
 						break;
-					case MouseEvent.MOUSE_UP:
+					case TimelineViewEvent.MOUSE_UP_FRAME:
 						setSelection();
 						break;
 					default:
@@ -279,8 +304,6 @@ package timeline.view
 			{
 				selectionList.push(r, rect.left, rect.right);
 			}
-
-			trace("[TimelineView.setSelection()]:" + selectionList);
 
 			this.mediator.setSelectedFrames(-1, -1, true, selectionList);
 
@@ -361,9 +384,9 @@ package timeline.view
 				layerContainer.removeChild(view.ui);
 				var i : int = this.layerViews.indexOf(view);
 				if (i >= 0) layerViews.splice(i, 1);
-				view.ui.removeEventListener(MouseEvent.MOUSE_DOWN, layerMouseHandler);
-				view.ui.removeEventListener(MouseEvent.MOUSE_MOVE, layerMouseHandler);
-				view.ui.removeEventListener(MouseEvent.MOUSE_UP, layerMouseHandler);
+				view.removeEventListener(TimelineViewEvent.MOUSE_DOWN_FRAME, layerMouseHandler);
+				view.removeEventListener(TimelineViewEvent.MOUSE_UP_FRAME, layerMouseHandler);
+				view.removeEventListener(TimelineViewEvent.MOUSE_MOVE_FRAME, layerMouseHandler);
 
 				this.relayoutLayers();
 			}
@@ -415,7 +438,6 @@ package timeline.view
 		 */
 		public function onSelectedFrames(selectedFrames : Vector.<int>) : void
 		{
-			trace("[TimelineView.onSelectedFrames(selectedFrames)]:" + selectedFrames);
 			for each (var layerView : LayerView in this.layerViews)
 			{
 				layerView.clearSelectedFrames();

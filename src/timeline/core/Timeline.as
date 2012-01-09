@@ -1,15 +1,23 @@
 package timeline.core
 {
+	import flash.events.EventDispatcher;
+	import flash.events.Event;
+	import flash.display.Shape;
+
 	import timeline.enums.validator.EnumsValidator;
 	import timeline.enums.EnumLayersToChange;
 	import timeline.enums.EnumLayerType;
 
 	/**
+	 * 逐帧事件
+	 */
+	[Event(name="enterFrame", type="flash.events.Event")]
+	/**
 	 * Timeline 对象表示 Flash 时间轴，可使用 fl.getDocumentDOM().getTimeline() 访问当前文档的时间轴。此方法返回当前正在编辑的场景或元件的时间轴。
 	 * @productversion Flash MX 2004。
 	 * @see http://help.adobe.com/zh_CN/flash/cs/extend/WS5b3ccc516d4fbf351e63e3d118a9024f3f-7f8f.html
 	 */
-	public class Timeline
+	public class Timeline extends EventDispatcher
 	{
 		private var _currentFrame : int;
 		private var _currentLayer : int;
@@ -18,6 +26,8 @@ package timeline.core
 		private var _name : String;
 		private var _frameCount : int;
 		private var _guideLines : XML;
+		private var _engine : Shape = new Shape();
+		private var _playing : Boolean;
 
 		public function Timeline()
 		{
@@ -226,7 +236,7 @@ package timeline.core
 		}
 
 		/**
-		 * 方法；将当前图层中每个选定的关键帧的 frame.tweenType 属性设置为 motion，如果需要，还可以将每个帧的内容转换为单个元件实例。此属性等同于 Flash 创作工具中的“创建补间动画”菜单项。 
+		 * 方法；创建一个传统补间。将当前图层中每个选定的关键帧的 frame.tweenType 属性设置为 motion，如果需要，还可以将每个帧的内容转换为单个元件实例。此属性等同于 Flash 创作工具中的“创建补间动画”菜单项。 
 		 * @param startFrameIndex	 一个从零开始的索引，它指定要创建补间动画的起始帧位置。如果省略 startFrameIndex，则该方法使用当前的选择。此参数是可选的。
 		 * @param endFrameIndex	 一个从零开始的索引，它指定要停止创建补间动画时的帧位置。帧范围的终点为 endFrameIndex（但不包括此值）。如果您只指定 startFrameIndex，则 endFrameIndex 默认为 startFrameIndex 的值。此参数是可选的。
 		 * @return 无。 
@@ -265,6 +275,10 @@ package timeline.core
 		 */
 		public function set currentFrame(value : int) : void
 		{
+			if (value < 0 || value >= this.frameCount)
+			{
+				value = 0;
+			}
 			_currentFrame = value;
 		}
 
@@ -910,6 +924,15 @@ package timeline.core
 		 */
 		public function startPlayback() : void
 		{
+			_playing = false;
+			_engine.removeEventListener(Event.ENTER_FRAME, engineHandler);
+			_engine.addEventListener(Event.ENTER_FRAME, engineHandler);
+		}
+
+		private function engineHandler(event : Event) : void
+		{
+			this.currentFrame += 1;
+			this.dispatchEvent(new Event(Event.ENTER_FRAME));
 		}
 
 		/**
@@ -922,6 +945,16 @@ package timeline.core
 		 */
 		public function stopPlayback() : void
 		{
+			_playing = false;
+			_engine.removeEventListener(Event.ENTER_FRAME, engineHandler);
+		}
+
+		/**
+		 * 是不是在播放
+		 */
+		public function get playing() : Boolean
+		{
+			return _playing;
 		}
 	}
 }

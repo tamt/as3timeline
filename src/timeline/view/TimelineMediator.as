@@ -1,5 +1,11 @@
 package timeline.view
 {
+	import timeline.core.Frame;
+	import timeline.core.elements.Element;
+
+	import flash.display.DisplayObject;
+	import flash.events.Event;
+
 	import timeline.view.mediator.Mediator;
 	import timeline.core.Layer;
 	import timeline.core.Timeline;
@@ -18,6 +24,15 @@ package timeline.view
 		public function TimelineMediator(timeline : Timeline)
 		{
 			this._timeline = timeline;
+			this._timeline.addEventListener(Event.ENTER_FRAME, onTimelinePlaying);
+		}
+
+		/**
+		 * 时间轴在播放
+		 */
+		private function onTimelinePlaying(event : Event) : void
+		{
+			this.view.onCurrentFrame(this.timeline.currentFrame);
 		}
 
 		/**
@@ -62,11 +77,30 @@ package timeline.view
 		}
 
 		/**
+		 * 在当前层当前帧上添加一个元素
+		 */
+		public function addElement(layerIndex : int, frameIndex : int, element : * = null) : void
+		{
+			var layer : Layer = this._timeline.layers[layerIndex];
+			var frame : Frame = layer.frames[frameIndex];
+			frame.addElement(element);
+		}
+
+		/**
+		 * 在当前层当前帧上删除一个元素
+		 */
+		public function removeElement(layerIndex : int, frameIndex : int, element : *= null) : void
+		{
+			var layer : Layer = this._timeline.layers[layerIndex];
+			var frame : Frame = layer.frames[frameIndex];
+			frame.addElement(element);
+		}
+
+		/**
 		 * 选择一个层
 		 */
 		public function selectLayer(index : int) : void
 		{
-			trace("[TimelineMediator.selectLayer(index)]:" + index);
 			this._timeline.setSelectedLayers(index);
 			this._timeline.currentLayer = index;
 			view.onSelectLayers(this._timeline.getSelectedLayers());
@@ -178,8 +212,42 @@ package timeline.view
 				var end : int = selection[i + 2];
 				layer.removeFrames(start, end);
 			}
-			
+
 			this.view.onDeleteSelectionFrames();
+		}
+
+		public function startPlay() : void
+		{
+			this.timeline.startPlayback();
+		}
+
+		public function stopPlay() : void
+		{
+			this.timeline.stopPlayback();
+		}
+
+		public function nextFrame() : void
+		{
+			this.timeline.currentFrame++;
+			this.view.onCurrentFrame(this.timeline.currentFrame);
+		}
+
+		public function prevFrame() : void
+		{
+			this.timeline.currentFrame--;
+			this.view.onCurrentFrame(this.timeline.currentFrame);
+		}
+
+		public function firstFrame() : void
+		{
+			this.timeline.currentFrame = 0;
+			this.view.onCurrentFrame(this.timeline.currentFrame);
+		}
+
+		public function lastFrame() : void
+		{
+			this.timeline.currentFrame = this.timeline.frameCount - 1;
+			this.view.onCurrentFrame(this.timeline.currentFrame);
 		}
 	}
 }

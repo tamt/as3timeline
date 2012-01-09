@@ -1,4 +1,5 @@
-package timeline.core {
+package timeline.core
+{
 	import timeline.core.elements.Element;
 
 	/**
@@ -89,7 +90,7 @@ package timeline.core {
 		public function clearContent() : void
 		{
 		}
-		
+
 		[Exclude]
 		public function set startFrame(startFrame : int) : void
 		{
@@ -106,6 +107,19 @@ package timeline.core {
 		public function set elements(elements : Vector.<Element>) : void
 		{
 			_elements = elements;
+		}
+
+		/**
+		 * 添加一个Element
+		 */
+		public function addElement(element : Element) : void
+		{
+			if (!elements)
+			{
+				elements = new Vector.<Element>();
+			}
+
+			if (elements.indexOf(elements) >= 0) elements.push(element);
 		}
 	}
 }
