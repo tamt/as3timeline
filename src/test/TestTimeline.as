@@ -37,18 +37,28 @@ package test
 		private function onSkinloaded(event : Event) : void
 		{
 			timeline = new Timeline();
-			timeline.addNewLayer();
-			var layer : Layer = timeline.layers[0];
-			layer.appendsToFrameIndex(10);
-			layer.insertKeyframe(3);
-			layer.insertKeyframe(8);
-			layer.addElement(3, new Element());
+
+			this.addTimelineLayer();
+			this.addTimelineLayer();
+			this.addTimelineLayer();
+			this.addTimelineLayer();
 
 			mediator = new TimelineMediator(timeline);
 			mediator.skin = skinLib;
 			view = new TimelineView(mediator);
 
 			addChild(view.ui);
+		}
+
+		private function addTimelineLayer() : void
+		{
+			timeline.addNewLayer();
+			timeline.currentLayer = timeline.layerCount - 1;
+			var layer : Layer = timeline.layers[timeline.layerCount - 1];
+			layer.appendsToFrameIndex(10 + Math.random() * 3 * 10);
+			layer.insertKeyframe(layer.frameCount * Math.random());
+			layer.insertKeyframe(layer.frameCount * Math.random());
+			layer.addElement(layer.frameCount * Math.random(), new Element());
 		}
 	}
 }

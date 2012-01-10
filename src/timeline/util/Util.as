@@ -1,5 +1,7 @@
 package timeline.util
 {
+	import timeline.core.elements.Element;
+
 	import flash.display.DisplayObjectContainer;
 
 	import timeline.core.Layer;
@@ -88,6 +90,20 @@ package timeline.util
 			{
 				container.removeChildAt(0);
 			}
+		}
+
+		public static function compareElements(elements1 : Vector.<Element>, elements2 : Vector.<Element>) : Boolean
+		{
+			if (elements1 == elements2) return true;
+			if (elements1.length == elements2.length)
+			{
+				for (var i : int = 0; i < elements1.length; i++)
+				{
+					if (elements1[i] != elements2[i]) return false;
+				}
+				return true;
+			}
+			return false;
 		}
 	}
 }

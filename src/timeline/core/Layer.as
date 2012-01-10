@@ -457,13 +457,6 @@ package timeline.core
 		}
 
 		/**
-		 * 把帧转化成关键帧
-		 */
-		private function converToKeyframe(frameIndex : int, blank : Boolean = true) : void
-		{
-		}
-
-		/**
 		 * 将当前图层中的某个范围内的帧转换成关键帧（如果没有指定帧，则转换所选范围内的帧）。
 		 * @param startFrameIndex	 一个从零开始的索引，它指定要转换成关键帧的起始帧。如果省略 startFrameIndex，则该方法转换当前选定的帧。此参数是可选的。
 		 * @param endFrameIndex	 一个从零开始的索引，它指定将停止转换成关键帧时的帧位置。要转换的帧范围的终点为 endFrameIndex（但不包括此值）。如果您只指定 startFrameIndex，则 endFrameIndex 默认为 startFrameIndex 的值。此参数是可选的。
@@ -475,7 +468,12 @@ package timeline.core
 		 */
 		public function convertToKeyframes(startFrameIndex : int, endFrameIndex : int) : void
 		{
-			this.coreConvertToKeyframes(startFrameIndex, endFrameIndex);
+			if (endFrameIndex <= startFrameIndex) endFrameIndex = startFrameIndex + 1;
+			for (var frameIndex : int = startFrameIndex; frameIndex < endFrameIndex; frameIndex++)
+			{
+				this.coreInsertKeyframe(frameIndex, false);
+			}
+//			this.coreConvertToKeyframes(startFrameIndex, endFrameIndex);
 		}
 
 		/**
@@ -605,7 +603,7 @@ package timeline.core
 		 */
 		public function coreInsertKeyframe(frameNumIndex : int, blank : Boolean = false) : void
 		{
-			var toConvertFrame : Frame, preKeyframe : Frame, nextFrame : Frame;
+			var preKeyframe : Frame, nextFrame : Frame;
 			var duration : int;
 
 			if (frameNumIndex >= frameCount)
@@ -956,6 +954,19 @@ package timeline.core
 				var keyframe : Frame = this.frames[this.frames[frameIndex].startFrame];
 				this.callFrameFunction("addElement", keyframe.startFrame, keyframe.startFrame + keyframe.duration, element);
 			}
+		}
+
+		/**
+		 * 返回前一个关键帧
+		 */
+		public function getPreKeyframe(frameIndex : int) : Frame
+		{
+			var frame : Frame = this.frames[this.frames[frameIndex].startFrame];
+			if (frame.startFrame > 0)
+			{
+				return this.frames[this.frames[frame.startFrame - 1].startFrame];
+			}
+			return null;
 		}
 	}
 }

@@ -145,6 +145,11 @@ package timeline.core
 		public function set elements(elements : Vector.<Element>) : void
 		{
 			_elements = elements;
+
+			if (!_elements)
+			{
+				this.tweenType = EnumTweenType.NONE;
+			}
 		}
 
 		/**

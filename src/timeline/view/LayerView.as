@@ -29,6 +29,7 @@ package timeline.view
 		private const blankKeyframeBgColor : int = 0xffffff;
 		private const keyframeBgColor : int = 0xcccccc;
 		private const tweenframeBgColor : int = 0xCCCCFF;
+		private const shapeTweenframeBgColor : int = 0xCCFFCC;
 		private const keyframeColor : int = 0x000000;
 		private const blankKeyframeColor : int = 0xffffff;
 		// 一个帧格的尺寸
@@ -122,7 +123,7 @@ package timeline.view
 			framesContextMenu.customItems.push(tweenMenuItem, removeTweenMenuItem);
 			// 设置菜单
 			frames_bg.contextMenu = framesContextMenu;
-//			(frames_bg.root as Sprite).contextMenu = framesContextMenu;
+			// (frames_bg.root as Sprite).contextMenu = framesContextMenu;
 		}
 
 		private function contextMenuEventHandler(event : ContextMenuEvent) : void
@@ -213,7 +214,8 @@ package timeline.view
 				var frame : Frame = this.layer.frames[i];
 
 				// 绘制背景
-				var bgColor : int = frame.hasElement() ? keyframeBgColor : blankKeyframeBgColor;
+				var bgColor : int = this.getFrameBgColor(frame);
+
 				framesContainer.graphics.lineStyle(0, 0x0);
 				framesContainer.graphics.beginFill(bgColor, 1);
 				framesContainer.graphics.drawRect(frame.startFrame * _frameW, 0, frame.duration * _frameW, _frameH - .5);
@@ -231,7 +233,17 @@ package timeline.view
 				{
 					if (frame.duration > 2)
 					{
-						var arrow : Sprite = this.mediator.skin.getSkinInstance("tween_ui");
+						var arrow : Sprite;
+						var nextKeyframe : Frame = null;
+						if ((frame.startFrame + frame.duration) < this.layer.frameCount) nextKeyframe = this.layer.frames[frame.startFrame + frame.duration];
+						if (nextKeyframe && nextKeyframe.hasElement() && Util.compareElements(nextKeyframe.elements, frame.elements))
+						{
+							arrow = this.mediator.skin.getSkinInstance("tween_ui");
+						}
+						else
+						{
+							arrow = this.mediator.skin.getSkinInstance("broken_tween_ui");
+						}
 						arrow.mouseChildren = arrow.mouseEnabled = false;
 						arrow.x = (frame.startFrame + 1) * _frameW;
 						arrow.y = 0;
@@ -257,17 +269,39 @@ package timeline.view
 			}
 		}
 
+		private function getFrameBgColor(frame : Frame) : uint
+		{
+			var color : uint;
+			if (frame.hasElement())
+			{
+				switch(frame.tweenType)
+				{
+					case EnumTweenType.NONE:
+						color = keyframeBgColor;
+						break;
+					case EnumTweenType.MOTION:
+						color = tweenframeBgColor;
+						break;
+					case EnumTweenType.MOTION:
+						color = shapeTweenframeBgColor;
+						break;
+					default:
+				}
+			}
+			else
+			{
+				color = blankKeyframeBgColor;
+			}
+
+			return color;
+		}
+
 		/**
 		 * 鼠标所在的那一帧
 		 */
 		public function get frameIndexAtMouse() : int
 		{
-			// var rect : Rectangle = this.framesContainer.getBounds(this.framesContainer);
-			// if (rect.contains(this.framesContainer.mouseX, this.framesContainer.mouseY))
-			// {
 			return Math.floor(this.framesContainer.mouseX / _frameW);
-			// }
-			// return -1;
 		}
 
 		public function get frameH() : Number

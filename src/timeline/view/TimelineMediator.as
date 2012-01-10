@@ -82,8 +82,17 @@ package timeline.view
 		public function addElement(layerIndex : int, frameIndex : int, element : * = null) : void
 		{
 			var layer : Layer = this._timeline.layers[layerIndex];
-			if (!element) element = new Element();
-			layer.addElement(frameIndex, element);
+			var frame : Frame = layer.frames[frameIndex];
+			var preKeyframe : Frame = layer.getPreKeyframe(frameIndex);
+			if (!frame.hasElement() && preKeyframe && preKeyframe.elements)
+			{
+				frame.elements = preKeyframe.elements;
+			}
+			else
+			{
+				element = new Element();
+				layer.addElement(frameIndex, element);
+			}
 
 			view.onAddElement(layerIndex, frameIndex, element);
 		}
