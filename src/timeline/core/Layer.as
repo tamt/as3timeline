@@ -1,5 +1,6 @@
 package timeline.core
 {
+	import timeline.enums.EnumTweenType;
 	import timeline.core.elements.Element;
 	import timeline.enums.EnumLayerType;
 	import timeline.enums.validator.EnumsValidator;
@@ -362,7 +363,11 @@ package timeline.core
 		 */
 		public function convertToBlankKeyframes(startFrameIndex : int, endFrameIndex : int) : void
 		{
-			this.coreConvertToKeyframes(startFrameIndex, endFrameIndex, true);
+			if (endFrameIndex <= startFrameIndex) endFrameIndex = startFrameIndex + 1;
+			for (var frameIndex : int = startFrameIndex; frameIndex < endFrameIndex; frameIndex++)
+			{
+				this.coreInsertKeyframe(frameIndex, true);
+			}
 		}
 
 		/**
@@ -414,7 +419,7 @@ package timeline.core
 		 */
 		private function coreConvertToKeyframes(startFrameIndex : int, endFrameIndex : int, clearFrameContent : Boolean = false) : void
 		{
-//			if (startFrameIndex >= endFrameIndex) endFrameIndex = startFrameIndex + 1;
+			// if (startFrameIndex >= endFrameIndex) endFrameIndex = startFrameIndex + 1;
 
 			var toConvertFrame : Frame, preKeyframe : Frame, nextFrame : Frame;
 			var frameIndex : int, frame : Frame;
@@ -449,6 +454,13 @@ package timeline.core
 				this.setFrameProperty("duration", duration, endFrameIndex, end);
 				this.setFrameProperty("startFrame", endFrameIndex, endFrameIndex, end);
 			}
+		}
+
+		/**
+		 * 把帧转化成关键帧
+		 */
+		private function converToKeyframe(frameIndex : int, blank : Boolean = true) : void
+		{
 		}
 
 		/**
@@ -629,6 +641,7 @@ package timeline.core
 					var endFrameIndex : int = nextFrame.startFrame + nextFrame.duration;
 					this.setFrameProperty("duration", duration, frameNumIndex, endFrameIndex);
 					this.setFrameProperty("startFrame", frameNumIndex, frameNumIndex, endFrameIndex);
+					if (blank) this.setFrameProperty("elements", null, frameNumIndex, endFrameIndex);
 				}
 
 				// 插入关键帧
@@ -708,6 +721,24 @@ package timeline.core
 			{
 				var frame : Frame = this.frames[frameIndex];
 				frame[property] = value;
+			}
+		}
+
+		/**
+		 * 调用选定帧的Frame对象的方法
+		 * @param funName				方法的名称
+		 * @param startFrameIndex		一个从零开始的索引，它指定要修改的起始帧编号。如果省略 startFrameIndex，则该方法使用当前的选择。此参数是可选的。
+		 * @param endFrameIndex	 		一个从零开始的索引，它指定要停止的第一帧。帧范围的终点为 endFrameIndex（但不包括此值）。如果您指定了 startFrameIndex 但省略 endFrameIndex，则 endFrameIndex 默认为 startFrameIndex 的值。此参数是可选的。
+		 * @param args					方法的参数
+		 */
+		public function callFrameFunction(funName : String, startFrameIndex : int, endFrameIndex : int, ...args) : void
+		{
+			if (endFrameIndex == startFrameIndex) endFrameIndex = startFrameIndex + 1;
+
+			for (var frameIndex : int = startFrameIndex; frameIndex < endFrameIndex; frameIndex++)
+			{
+				var frame : Frame = this.frames[frameIndex];
+				(frame[funName] as Function).apply(null, args);
 			}
 		}
 
@@ -801,11 +832,11 @@ package timeline.core
 						frame = this.frames[i];
 						if (checkIsKeyFrame(i))
 						{
-							str += frame.elements ? "●" : "○";
+							str += frame.hasElement() ? "●" : "○";
 						}
 						else
 						{
-							str += frame.elements ? "■" : "□";
+							str += frame.hasElement() ? "■" : "□";
 						}
 					}
 				}
@@ -821,10 +852,10 @@ package timeline.core
 					for (i = 0; i < this.frames.length; i)
 					{
 						frame = this.frames[i];
-						str += frame.elements ? "●" : "○";
+						str += frame.hasElement() ? "●" : "○";
 						for (var j : int = frame.startFrame + 1; j < frame.startFrame + frame.duration; j++)
 						{
-							str += frame.elements ? "■" : "□";
+							str += frame.hasElement() ? "■" : "□";
 						}
 						i += frame.duration;
 					}
@@ -839,7 +870,7 @@ package timeline.core
 		}
 
 		/**
-		 * 方法；将当前图层中每个选定的关键帧的 frame.tweenType 属性设置为 motion，如果需要，还可以将每个帧的内容转换为单个元件实例。此属性等同于 Flash 创作工具中的“创建补间动画”菜单项。 
+		 * 方法；创建一个传统补间. 将当前图层中每个选定的关键帧的 frame.tweenType 属性设置为 motion，如果需要，还可以将每个帧的内容转换为单个元件实例。此属性等同于 Flash 创作工具中的“创建补间动画”菜单项。 
 		 * @param startFrameIndex	 一个从零开始的索引，它指定要创建补间动画的起始帧位置。如果省略 startFrameIndex，则该方法使用当前的选择。此参数是可选的。
 		 * @param endFrameIndex	 一个从零开始的索引，它指定要停止创建补间动画时的帧位置。帧范围的终点为 endFrameIndex（但不包括此值）。如果您只指定 startFrameIndex，则 endFrameIndex 默认为 startFrameIndex 的值。此参数是可选的。
 		 * @return 无。 
@@ -850,14 +881,47 @@ package timeline.core
 		 */
 		public function createMotionTween(startFrameIndex : int, endFrameIndex : int) : void
 		{
+			if (endFrameIndex <= startFrameIndex) endFrameIndex = startFrameIndex + 1;
 			var keyframe : Frame;
 			keyframe = this.frames[this.frames[startFrameIndex].startFrame];
-			while (Util.extentIntersection(keyframe.startFrame, keyframe.startFrame + keyframe.duration, startFrameIndex, endFrameIndex))
+			if (keyframe.hasElement())
 			{
-				this.setFrameProperty("tweenType", "motion", keyframe.startFrame, keyframe.startFrame + keyframe.duration);
-				if (keyframe.startFrame + keyframe.duration < this.frameCount)
+				while (Util.extentIntersection(keyframe.startFrame, keyframe.startFrame + keyframe.duration, startFrameIndex, endFrameIndex))
 				{
-					keyframe = this.frames[this.frames[keyframe.startFrame + keyframe.duration].startFrame];
+					this.setFrameProperty("tweenType", EnumTweenType.MOTION, keyframe.startFrame, keyframe.startFrame + keyframe.duration);
+					if (keyframe.startFrame + keyframe.duration < this.frameCount)
+					{
+						keyframe = this.frames[this.frames[keyframe.startFrame + keyframe.duration].startFrame];
+					}
+					else
+					{
+						break;
+					}
+				}
+			}
+		}
+
+		/**
+		 * 删除补间动画
+		 */
+		public function removeMotionTween(startFrameIndex : int, endFrameIndex : int) : void
+		{
+			if (endFrameIndex <= startFrameIndex) endFrameIndex = startFrameIndex + 1;
+			var keyframe : Frame;
+			keyframe = this.frames[this.frames[startFrameIndex].startFrame];
+			if (keyframe.hasElement())
+			{
+				while (Util.extentIntersection(keyframe.startFrame, keyframe.startFrame + keyframe.duration, startFrameIndex, endFrameIndex))
+				{
+					this.setFrameProperty("tweenType", EnumTweenType.NONE, keyframe.startFrame, keyframe.startFrame + keyframe.duration);
+					if (keyframe.startFrame + keyframe.duration < this.frameCount)
+					{
+						keyframe = this.frames[this.frames[keyframe.startFrame + keyframe.duration].startFrame];
+					}
+					else
+					{
+						break;
+					}
 				}
 			}
 		}
@@ -880,6 +944,18 @@ package timeline.core
 		public function clearSelectedFrames() : void
 		{
 			_selectedFrames = new Vector.<int>();
+		}
+
+		/**
+		 * 在帧上添加一个元素
+		 */
+		public function addElement(frameIndex : int, element : *) : void
+		{
+			if (frameIndex < this.frameCount && frameIndex >= 0)
+			{
+				var keyframe : Frame = this.frames[this.frames[frameIndex].startFrame];
+				this.callFrameFunction("addElement", keyframe.startFrame, keyframe.startFrame + keyframe.duration, element);
+			}
 		}
 	}
 }

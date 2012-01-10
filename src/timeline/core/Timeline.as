@@ -252,6 +252,13 @@ package timeline.core
 			layer.createMotionTween(startFrameIndex, endFrameIndex);
 		}
 
+		public function removeMotionTween(startFrameIndex : int, endFrameIndex : int) : void
+		{
+			// create motion tween
+			var layer : Layer = this.layers[this.currentLayer];
+			layer.removeMotionTween(startFrameIndex, endFrameIndex);
+		}
+		
 		/**
 		 * 属性；当前播放头位置的帧的从零开始的索引。 
 		 * @return %RETURN%

@@ -1,20 +1,21 @@
 package timeline.view
 {
-	import timeline.util.Util;
-
-	import flash.display.DisplayObject;
-
-	import timeline.view.event.TimelineViewEvent;
-
-	import flash.events.MouseEvent;
-
 	import timeline.core.Frame;
 	import timeline.core.Layer;
+	import timeline.enums.EnumTweenType;
+	import timeline.util.Util;
+	import timeline.view.event.TimelineViewEvent;
 
+	import flash.display.DisplayObject;
 	import flash.display.MovieClip;
 	import flash.display.SimpleButton;
 	import flash.display.Sprite;
+	import flash.events.ContextMenuEvent;
+	import flash.events.Event;
+	import flash.events.MouseEvent;
 	import flash.text.TextField;
+	import flash.ui.ContextMenu;
+	import flash.ui.ContextMenuItem;
 
 	[Event(name="MOUSE_DOWN_FRAME", type="timeline.view.event.TimelineViewEvent")]
 	[Event(name="MOUSE_UP_FRAME", type="timeline.view.event.TimelineViewEvent")]
@@ -25,8 +26,11 @@ package timeline.view
 	 */
 	public class LayerView extends BaseView
 	{
+		private const blankKeyframeBgColor : int = 0xffffff;
+		private const keyframeBgColor : int = 0xcccccc;
+		private const tweenframeBgColor : int = 0xCCCCFF;
+		private const keyframeColor : int = 0x000000;
 		private const blankKeyframeColor : int = 0xffffff;
-		private const keyframeColor : int = 0xcccccc;
 		// 一个帧格的尺寸
 		private var _frameW : Number = 8;
 		private var _frameH : Number = 18;
@@ -47,6 +51,8 @@ package timeline.view
 		private var title_bg : MovieClip;
 		private var selection_ui : Sprite;
 		private var mediator : TimelineMediator;
+		// 帧操作相关的右键菜单
+		private var framesContextMenu : ContextMenu;
 
 		public function LayerView(layer : Layer, ui : *, mediator : TimelineMediator)
 		{
@@ -71,23 +77,74 @@ package timeline.view
 			title_bg = this._ui['title_bg'];
 
 			this.framesContainer = new Sprite();
-			this._ui.addChild(this.framesContainer);
+			this.frames_bg.addChild(this.framesContainer);
 
 			selection_ui = new Sprite();
 			this._ui.addChild(this.selection_ui);
 
-			this.selection_ui.x = this.framesContainer.x = this.frames_bg.x;
-			this.selection_ui.y = this.framesContainer.y = this.frames_bg.y;
+			this.selection_ui.x = this.frames_bg.x;
+			this.selection_ui.y = this.frames_bg.y;
 
 			this.framesContainer.mouseEnabled = this.framesContainer.mouseChildren = false;
 			this.frames_bg.mouseChildren = false;
 			this.title_tf.mouseEnabled = this.title_tf.selectable = this.title_tf.mouseWheelEnabled = false;
+			this.selection_ui.mouseChildren = this.selection_ui.mouseEnabled = false;
 
 			// 事件侦听
 			this.title_bg.addEventListener(MouseEvent.CLICK, layerMouseHandler);
 			this.frames_bg.addEventListener(MouseEvent.MOUSE_DOWN, framesMouseHandler);
 			this.frames_bg.addEventListener(MouseEvent.MOUSE_MOVE, framesMouseHandler);
 			this.frames_bg.addEventListener(MouseEvent.MOUSE_UP, framesMouseHandler);
+
+			if (this.ui.stage)
+			{
+				this.onAdded();
+			}
+			else
+			{
+				this.ui.addEventListener(Event.ADDED_TO_STAGE, onAdded);
+			}
+		}
+
+		private function onAdded(event : Event = null) : void
+		{
+			this.ui.removeEventListener(Event.ADDED_TO_STAGE, onAdded);
+			// 创建右键菜单
+			framesContextMenu = new ContextMenu();
+			framesContextMenu.hideBuiltInItems();
+
+			var tweenMenuItem : ContextMenuItem = new ContextMenuItem("add tween");
+			tweenMenuItem.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT, contextMenuEventHandler);
+
+			var removeTweenMenuItem : ContextMenuItem = new ContextMenuItem("remove tween");
+			removeTweenMenuItem.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT, contextMenuEventHandler);
+
+			framesContextMenu.customItems.push(tweenMenuItem, removeTweenMenuItem);
+			// 设置菜单
+			frames_bg.contextMenu = framesContextMenu;
+//			(frames_bg.root as Sprite).contextMenu = framesContextMenu;
+		}
+
+		private function contextMenuEventHandler(event : ContextMenuEvent) : void
+		{
+			var menuItem : ContextMenuItem;
+			menuItem = event.currentTarget as ContextMenuItem;
+			switch(event.type)
+			{
+				case ContextMenuEvent.MENU_ITEM_SELECT:
+					switch(menuItem.caption)
+					{
+						case "add tween":
+							this.mediator.createMotionTween();
+							break;
+						case "remove tween":
+							this.mediator.removeMotionTween();
+							break;
+						default:
+					}
+					break;
+				default:
+			}
 		}
 
 		override public function destroy() : void
@@ -147,6 +204,8 @@ package timeline.view
 				(this.outline_mc.fill_mc as DisplayObject).transform.colorTransform = Util.getTintColorTransform(this.layer.color);
 			}
 
+			// 清除已有绘制
+			Util.removeAllChildren(framesContainer);
 			framesContainer.graphics.clear();
 
 			for (var i : int = 0; i < this.layer.frames.length; i)
@@ -154,26 +213,44 @@ package timeline.view
 				var frame : Frame = this.layer.frames[i];
 
 				// 绘制背景
-				var bgColor : int = (frame.elements && frame.elements.length) ? keyframeColor : blankKeyframeColor;
+				var bgColor : int = frame.hasElement() ? keyframeBgColor : blankKeyframeBgColor;
 				framesContainer.graphics.lineStyle(0, 0x0);
-				framesContainer.graphics.beginFill(bgColor, 0);
+				framesContainer.graphics.beginFill(bgColor, 1);
 				framesContainer.graphics.drawRect(frame.startFrame * _frameW, 0, frame.duration * _frameW, _frameH - .5);
 				framesContainer.graphics.endFill();
 
 				// 绘制关键帧起始帧标记(圆形)
-				var markColor : int = (frame.elements && frame.elements.length) ? keyframeColor : blankKeyframeColor;
-				framesContainer.graphics.lineStyle(1, 0x0);
+				var markColor : int = frame.hasElement() ? keyframeColor : blankKeyframeColor;
+				framesContainer.graphics.lineStyle(1, 0x0, frame.hasElement() ? 0 : 1);
 				framesContainer.graphics.beginFill(markColor);
 				framesContainer.graphics.drawCircle(frame.startFrame * _frameW + _frameW / 2, _frameH / 2, markW / 2);
 				framesContainer.graphics.endFill();
 
-				// 绘制关键帧结束帧标记(矩形)
-				if (frame.duration > 1)
+				// 绘制动画箭头
+				if (frame.tweenType == EnumTweenType.MOTION || frame.tweenType == EnumTweenType.SHAPE)
 				{
-					framesContainer.graphics.lineStyle(1, 0x0);
-					framesContainer.graphics.beginFill(0xffffff);
-					framesContainer.graphics.drawRect((frame.startFrame + frame.duration - 1) * _frameW + _frameW / 2 - markW / 2, _frameH / 2 - markH / 2, markW, markH);
-					framesContainer.graphics.endFill();
+					if (frame.duration > 2)
+					{
+						var arrow : Sprite = this.mediator.skin.getSkinInstance("tween_ui");
+						arrow.mouseChildren = arrow.mouseEnabled = false;
+						arrow.x = (frame.startFrame + 1) * _frameW;
+						arrow.y = 0;
+						arrow.width = _frameW * (frame.duration - 1);
+						arrow.height = _frameH;
+
+						this.framesContainer.addChild(arrow);
+					}
+				}
+				else
+				{
+					// 绘制关键帧结束帧标记(矩形)
+					if (frame.duration > 1)
+					{
+						framesContainer.graphics.lineStyle(1, 0x0);
+						framesContainer.graphics.beginFill(0xffffff);
+						framesContainer.graphics.drawRect((frame.startFrame + frame.duration - 1) * _frameW + _frameW / 2 - markW / 2, _frameH / 2 - markH / 2, markW, markH);
+						framesContainer.graphics.endFill();
+					}
 				}
 
 				i += frame.duration;
@@ -245,10 +322,7 @@ package timeline.view
 		 */
 		public function clearSelectedFrames() : void
 		{
-			while (selection_ui.numChildren)
-			{
-				selection_ui.removeChildAt(0);
-			}
+			Util.removeAllChildren(selection_ui);
 		}
 
 		public function onUpdate() : void

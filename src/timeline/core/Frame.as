@@ -1,5 +1,7 @@
 package timeline.core
 {
+	import timeline.enums.EnumTweenType;
+	import timeline.enums.validator.EnumsValidator;
 	import timeline.core.elements.Element;
 
 	/**
@@ -13,6 +15,7 @@ package timeline.core
 		private var _startFrame : int;
 		private var _duration : int = 1;
 		private var _name : String;
+		private var _tweenType : String = EnumTweenType.NONE;
 
 		public function Frame()
 		{
@@ -71,6 +74,40 @@ package timeline.core
 			return _elements;
 		}
 
+		public function hasElement() : Boolean
+		{
+			return elements && elements.length;
+		}
+
+		/**
+		 * 属性；一个字符串，它指定补间的类型；可接受值为 "motion"、"shape" 或 "none"。指定 "none" 值将删除补间动画。使用 timeline.createMotionTween() 方法创建一个补间动画。 如果指定 "motion" 值，帧中的对象必须为元件、文本字段或组合对象。该对象将从它在当前关键帧中的位置补间至下一关键帧中的位置。 如果指定 "shape"，帧中的对象必须为形状对象。该对象将从当前关键帧中的形状开始，混合成下一关键帧中的形状。
+		 * @return %RETURN%
+		 * @example <p>下面的示例指定一个对象为补间动画，所以它应从当前关键帧中的位置补间至后续关键帧中的位置：</p>
+		 * @usage <pre>frame.tweenType</pre>
+		 * @productversion Flash MX 2004。 
+		 * @see http://help.adobe.com/zh_CN/flash/cs/extend/WS5b3ccc516d4fbf351e63e3d118a9024f3f-7aab.html
+		 */
+		public function get tweenType() : String
+		{
+			return _tweenType;
+		}
+
+		/**
+		 * 属性；一个字符串，它指定补间的类型；可接受值为 "motion"、"shape" 或 "none"。指定 "none" 值将删除补间动画。使用 timeline.createMotionTween() 方法创建一个补间动画。 如果指定 "motion" 值，帧中的对象必须为元件、文本字段或组合对象。该对象将从它在当前关键帧中的位置补间至下一关键帧中的位置。 如果指定 "shape"，帧中的对象必须为形状对象。该对象将从当前关键帧中的形状开始，混合成下一关键帧中的形状。
+		 * @return %RETURN%
+		 * @example <p>下面的示例指定一个对象为补间动画，所以它应从当前关键帧中的位置补间至后续关键帧中的位置：</p>
+		 * @usage <pre>frame.tweenType</pre>
+		 * @productversion Flash MX 2004。 
+		 * @see http://help.adobe.com/zh_CN/flash/cs/extend/WS5b3ccc516d4fbf351e63e3d118a9024f3f-7aab.html
+		 */
+		public function set tweenType(value : String) : void
+		{
+			if (EnumsValidator.validate(EnumTweenType, value))
+			{
+				_tweenType = value;
+			}
+		}
+
 		/**
 		 * 只读属性；序列中第一帧的索引。
 		 * @return %RETURN%
@@ -89,6 +126,7 @@ package timeline.core
 		 */
 		public function clearContent() : void
 		{
+			elements = null;
 		}
 
 		[Exclude]
@@ -114,12 +152,14 @@ package timeline.core
 		 */
 		public function addElement(element : Element) : void
 		{
+			if (!element) return;
+
 			if (!elements)
 			{
 				elements = new Vector.<Element>();
 			}
 
-			if (elements.indexOf(elements) >= 0) elements.push(element);
+			if (elements.indexOf(elements) < 0) elements.push(element);
 		}
 	}
 }

@@ -1,5 +1,7 @@
 package test
 {
+	import timeline.core.elements.Element;
+	import timeline.core.Layer;
 	import timeline.core.Timeline;
 	import timeline.view.SkinLibrary;
 	import timeline.view.TimelineMediator;
@@ -35,6 +37,13 @@ package test
 		private function onSkinloaded(event : Event) : void
 		{
 			timeline = new Timeline();
+			timeline.addNewLayer();
+			var layer : Layer = timeline.layers[0];
+			layer.appendsToFrameIndex(10);
+			layer.insertKeyframe(3);
+			layer.insertKeyframe(8);
+			layer.addElement(3, new Element());
+
 			mediator = new TimelineMediator(timeline);
 			mediator.skin = skinLib;
 			view = new TimelineView(mediator);

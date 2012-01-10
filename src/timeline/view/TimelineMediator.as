@@ -82,8 +82,10 @@ package timeline.view
 		public function addElement(layerIndex : int, frameIndex : int, element : * = null) : void
 		{
 			var layer : Layer = this._timeline.layers[layerIndex];
-			var frame : Frame = layer.frames[frameIndex];
-			frame.addElement(element);
+			if (!element) element = new Element();
+			layer.addElement(frameIndex, element);
+
+			view.onAddElement(layerIndex, frameIndex, element);
 		}
 
 		/**
@@ -93,7 +95,6 @@ package timeline.view
 		{
 			var layer : Layer = this._timeline.layers[layerIndex];
 			var frame : Frame = layer.frames[frameIndex];
-			frame.addElement(element);
 		}
 
 		/**
@@ -188,6 +189,20 @@ package timeline.view
 			this.view.onConvertSelectionKeyframes();
 		}
 
+		public function convertSelectionBlankKeyframes() : void
+		{
+			var selection : Vector.<int> = this._timeline.getSelectedFrames();
+			for (var i : int = 0; i < selection.length; i += 3)
+			{
+				var layer : Layer = this._timeline.layers[selection[i]];
+				var start : int = selection[i + 1];
+				var end : int = selection[i + 2];
+				layer.convertToBlankKeyframes(start, end);
+			}
+
+			this.view.onConvertSelectionKeyframes();
+		}
+
 		/**
 		 * 设置当前帧
 		 */
@@ -248,6 +263,30 @@ package timeline.view
 		{
 			this.timeline.currentFrame = this.timeline.frameCount - 1;
 			this.view.onCurrentFrame(this.timeline.currentFrame);
+		}
+
+		/**
+		 * 当前帧位置创建Tween动画
+		 */
+		public function createMotionTween() : void
+		{
+			var startFrameIndex : int = this.timeline.currentFrame;
+			var endFrameIndex : int = this.timeline.currentFrame + 1;
+			this.timeline.createMotionTween(startFrameIndex, endFrameIndex);
+
+			this.view.onCreateMotionTween();
+		}
+
+		/**
+		 * 删除当前帧位置的Tween动画
+		 */
+		public function removeMotionTween() : void
+		{
+			var startFrameIndex : int = this.timeline.currentFrame;
+			var endFrameIndex : int = this.timeline.currentFrame + 1;
+			this.timeline.removeMotionTween(startFrameIndex, endFrameIndex);
+
+			this.view.onRemoveMotionTween();
 		}
 	}
 }

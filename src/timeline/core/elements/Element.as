@@ -251,6 +251,11 @@ package timeline.core.elements
 		 */
 		public function removePersistentData(name : String) : void
 		{
+			if (_persistentData)
+			{
+				_persistentData[name] = null;
+				delete _persistentData[name];
+			}
 		}
 
 		/**

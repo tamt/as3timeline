@@ -41,7 +41,6 @@ package timeline.enums.validator
 
 			for each (var constName : String in _consts)
 			{
-				trace(constName, enumType[constName], value);
 				if (enumType[constName] == value)
 				{
 					return true;

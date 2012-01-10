@@ -1,5 +1,7 @@
 package timeline.util
 {
+	import flash.display.DisplayObjectContainer;
+
 	import timeline.core.Layer;
 
 	import flash.geom.ColorTransform;
@@ -33,8 +35,7 @@ package timeline.util
 		 */
 		public static function extentIntersection(aStart : int, aEnd : int, bStart : int, bEnd : int) : Boolean
 		{
-			var l : int = bEnd - bStart;
-			if (bStart >= (aStart - l) || bEnd <= (aEnd - l))
+			if (bStart <= aEnd && bEnd >= aStart)
 			{
 				return true;
 			}
@@ -79,6 +80,14 @@ package timeline.util
 			var b : uint = Math.random() * 255;
 
 			return (r << 16) + (g << 8) + b;
+		}
+
+		public static function removeAllChildren(container : DisplayObjectContainer) : void
+		{
+			while (container.numChildren)
+			{
+				container.removeChildAt(0);
+			}
 		}
 	}
 }

@@ -37,7 +37,7 @@ package timeline.view
 		//
 		private var mediator : TimelineMediator;
 		// "当前帧"的游标
-		private var currentFrameMark : DisplayObject;
+		private var currentFrameMark : Sprite;
 		// 所选帧区域
 		private var selection : Rectangle;
 		private var selectionGraph : Sprite;
@@ -75,6 +75,7 @@ package timeline.view
 			this.selectionGraph = this.mediator.skin.getSkinInstance("selection_ui");
 			// this.selectionGraph = new Sprite();
 			this.selectionGraph.mouseEnabled = this.selectionGraph.mouseChildren = false;
+			this.currentFrameMark.mouseEnabled = this.currentFrameMark.mouseChildren = false;
 			//
 			this.visible_btn.addEventListener(MouseEvent.CLICK, buttonHandler);
 			this.lock_btn.addEventListener(MouseEvent.CLICK, buttonHandler);
@@ -128,8 +129,15 @@ package timeline.view
 				case Keyboard.F6:
 					this.mediator.convertSelectionKeyFrames();
 					break;
+				case Keyboard.F7:
+					this.mediator.convertSelectionBlankKeyframes();
+					break;
 				case Keyboard.DELETE:
 					this.mediator.deleteSelectionFrames();
+					break;
+				case Keyboard.INSERT:
+					this.mediator.addElement(this.mediator.timeline.currentLayer, this.mediator.timeline.currentFrame);
+					break;
 				default:
 			}
 		}
@@ -485,6 +493,30 @@ package timeline.view
 				var layerView : LayerView = this.getLayerView(layer);
 				layerView.onUpdate();
 			}
+		}
+
+		/**
+		 * 在当前层当前帧上添加一个元素
+		 */
+		public function onAddElement(layerIndex : int, frameIndex : int, element : *) : void
+		{
+			var layerView : LayerView = this.getLayerView(this.mediator.timeline.layers[layerIndex]);
+			layerView.onUpdate();
+		}
+
+		/**
+		 * 当在当前层当前帧添加补间动画
+		 */
+		public function onCreateMotionTween() : void
+		{
+			var layerView : LayerView = this.getLayerView(this.mediator.timeline.layers[this.mediator.timeline.currentLayer]);
+			layerView.onUpdate();
+		}
+
+		public function onRemoveMotionTween() : void
+		{
+			var layerView : LayerView = this.getLayerView(this.mediator.timeline.layers[this.mediator.timeline.currentLayer]);
+			layerView.onUpdate();
 		}
 	}
 }
