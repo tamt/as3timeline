@@ -1,9 +1,9 @@
 package timeline.view
 {
-	import timeline.view.event.TimelineViewEvent;
 	import timeline.core.Layer;
+	import timeline.view.event.TimelineViewEvent;
+	import timeline.view.interfaces.ITimelineView;
 
-	import flash.display.DisplayObject;
 	import flash.display.MovieClip;
 	import flash.display.SimpleButton;
 	import flash.display.Sprite;
@@ -13,11 +13,12 @@ package timeline.view
 	import flash.geom.Rectangle;
 	import flash.ui.Keyboard;
 
+
 	/**
 	 * 时间轴视图
 	 * @author tamt
 	 */
-	public class TimelineView extends BaseView
+	public class TimelineView extends BaseView implements ITimelineView
 	{
 		// ui
 		private var _ui : MovieClip;

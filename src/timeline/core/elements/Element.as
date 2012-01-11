@@ -1,5 +1,8 @@
 package timeline.core.elements
 {
+	import flash.display.Shape;
+	import flash.display.DisplayObject;
+
 	import timeline.core.Layer;
 	import timeline.enums.EnumPersistentDataType;
 	import timeline.enums.validator.EnumsValidator;
@@ -19,27 +22,37 @@ package timeline.core.elements
 		private var _elementType : String;
 		private var _persistentData : Dictionary;
 		private var _transformPoint : Point;
-		private var _height : Number;
 		private var _layer : Layer;
 		private var _left : Number;
 		private var _locked : Boolean;
-		private var _matrix : Matrix;
 		private var _name : String;
-		private var _rotation : Number;
-		private var _scaleX : Number;
-		private var _scaleY : Number;
 		private var _selected : Boolean;
-		private var _skewX : Number;
-		private var _skewY : Number;
 		private var _top : Number;
 		private var _transformX : Number;
 		private var _transformY : Number;
-		private var _width : Number;
-		private var _x : Number;
-		private var _y : Number;
+		// 显示对象
+		private var dpProxy : DisplayObject;
+		private var _dp : DisplayObject;
 
-		public function Element()
+		public function Element(dp : DisplayObject)
 		{
+			_dp = dp;
+			if (!_dp)
+			{
+				throw new Error('Element.dp is null.');
+			}
+			dpProxy = buildDisplayObjectProxy(dp);
+		}
+
+		private function buildDisplayObjectProxy(dp : DisplayObject) : DisplayObject
+		{
+			var proxy : Shape = new Shape();
+			var w : Number = dp.width / dp.scaleX;
+			var h : Number = dp.height / dp.scaleY;
+			proxy.graphics.beginFill(0x0);
+			proxy.graphics.drawRect(0, 0, w, h);
+			proxy.graphics.endFill();
+			return proxy;
 		}
 
 		/**
@@ -120,7 +133,7 @@ package timeline.core.elements
 		 */
 		public function get height() : Number
 		{
-			return _height;
+			return dpProxy.height;
 		}
 
 		/**
@@ -133,7 +146,7 @@ package timeline.core.elements
 		 */
 		public function set height(value : Number) : void
 		{
-			_height = value;
+			dpProxy.height = value;
 		}
 
 		/**
@@ -198,7 +211,7 @@ package timeline.core.elements
 		 */
 		public function get matrix() : Matrix
 		{
-			return _matrix;
+			return dpProxy.transform.matrix;
 		}
 
 		/**
@@ -211,7 +224,7 @@ package timeline.core.elements
 		 */
 		public function set matrix(value : Matrix) : void
 		{
-			this._matrix = value;
+			dpProxy.transform.matrix = value;
 		}
 
 		/**
@@ -268,7 +281,7 @@ package timeline.core.elements
 		 */
 		public function get rotation() : Number
 		{
-			return _rotation;
+			return dpProxy.rotation;
 		}
 
 		/**
@@ -281,7 +294,7 @@ package timeline.core.elements
 		 */
 		public function set rotation(value : Number) : void
 		{
-			_rotation = value;
+			dpProxy.rotation = value;
 		}
 
 		/**
@@ -294,7 +307,7 @@ package timeline.core.elements
 		 */
 		public function get scaleX() : Number
 		{
-			return _scaleX;
+			return dpProxy.scaleX;
 		}
 
 		/**
@@ -307,7 +320,7 @@ package timeline.core.elements
 		 */
 		public function set scaleX(value : Number) : void
 		{
-			_scaleX = value;
+			dpProxy.scaleX = value;
 		}
 
 		/**
@@ -320,7 +333,7 @@ package timeline.core.elements
 		 */
 		public function get scaleY() : Number
 		{
-			return _scaleY;
+			return dpProxy.scaleY;
 		}
 
 		/**
@@ -333,7 +346,7 @@ package timeline.core.elements
 		 */
 		public function set scaleY(value : Number) : void
 		{
-			_scaleY = value;
+			dpProxy.scaleY = value;
 		}
 
 		/**
@@ -416,7 +429,7 @@ package timeline.core.elements
 		 */
 		public function get skewX() : Number
 		{
-			return _skewX;
+			return this.matrix.c;
 		}
 
 		/**
@@ -429,7 +442,9 @@ package timeline.core.elements
 		 */
 		public function set skewX(value : Number) : void
 		{
-			this._skewX = value;
+			var mt : Matrix = this.matrix;
+			mt.c = value;
+			this.matrix = mt;
 		}
 
 		/**
@@ -442,7 +457,7 @@ package timeline.core.elements
 		 */
 		public function get skewY() : Number
 		{
-			return _skewY;
+			return this.matrix.b;
 		}
 
 		/**
@@ -455,7 +470,9 @@ package timeline.core.elements
 		 */
 		public function set skewY(value : Number) : void
 		{
-			_skewY = value;
+			var mt : Matrix = this.matrix;
+			mt.b = value;
+			this.matrix = mt;
 		}
 
 		/**
@@ -533,7 +550,7 @@ package timeline.core.elements
 		 */
 		public function get width() : Number
 		{
-			return _width;
+			return this.dpProxy.width;
 		}
 
 		/**
@@ -546,7 +563,7 @@ package timeline.core.elements
 		 */
 		public function set width(value : Number) : void
 		{
-			_width = value;
+			this.dpProxy.width = value;
 		}
 
 		/**
@@ -559,7 +576,7 @@ package timeline.core.elements
 		 */
 		public function get x() : Number
 		{
-			return _x;
+			return this.dpProxy.x;
 		}
 
 		/**
@@ -572,7 +589,7 @@ package timeline.core.elements
 		 */
 		public function set x(value : Number) : void
 		{
-			_x = value;
+			this.dpProxy.x = value;
 		}
 
 		/**
@@ -585,7 +602,7 @@ package timeline.core.elements
 		 */
 		public function get y() : Number
 		{
-			return _y;
+			return this.dpProxy.y;
 		}
 
 		/**
@@ -598,7 +615,12 @@ package timeline.core.elements
 		 */
 		public function set y(value : Number) : void
 		{
-			_y = value;
+			this.dpProxy.y = value;
+		}
+
+		public function get dp() : DisplayObject
+		{
+			return _dp;
 		}
 	}
 }

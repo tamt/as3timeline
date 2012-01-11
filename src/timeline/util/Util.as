@@ -92,6 +92,9 @@ package timeline.util
 			}
 		}
 
+		/**
+		 * 对比Vector里的元素是不是相同.
+		 */
 		public static function compareElements(elements1 : Vector.<Element>, elements2 : Vector.<Element>) : Boolean
 		{
 			if (elements1 == elements2) return true;
