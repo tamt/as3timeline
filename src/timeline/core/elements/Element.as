@@ -622,5 +622,16 @@ package timeline.core.elements
 		{
 			return _dp;
 		}
+
+		/**
+		 * 克隆
+		 */
+		public function clone() : Element
+		{
+			var ele : Element = new Element(this.dp);
+			ele.x = this.x;
+			ele.y = this.y;
+			return ele;
+		}
 	}
 }

@@ -1,5 +1,7 @@
 package timeline.util
 {
+	import flash.geom.Matrix;
+
 	import timeline.core.elements.Element;
 
 	import flash.display.DisplayObjectContainer;
@@ -102,11 +104,24 @@ package timeline.util
 			{
 				for (var i : int = 0; i < elements1.length; i++)
 				{
-					if (elements1[i] != elements2[i]) return false;
+					if (elements1[i].dp != elements2[i].dp) return false;
 				}
 				return true;
 			}
 			return false;
+		}
+
+		public static function getTweenMatrix(fromMatrix : Matrix, toMatrix : Matrix, duration : int, current : int) : Matrix
+		{
+			var mx : Matrix = new Matrix();
+			var f : Number = current / duration;
+			mx.a = fromMatrix.a + f * (toMatrix.a - fromMatrix.a);
+			mx.b = fromMatrix.b + f * (toMatrix.b - fromMatrix.b);
+			mx.c = fromMatrix.c + f * (toMatrix.c - fromMatrix.c);
+			mx.d = fromMatrix.d + f * (toMatrix.d - fromMatrix.d);
+			mx.tx = fromMatrix.tx + f * (toMatrix.tx - fromMatrix.tx);
+			mx.ty = fromMatrix.ty + f * (toMatrix.ty - fromMatrix.ty);
+			return mx;
 		}
 	}
 }

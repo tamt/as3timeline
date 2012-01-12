@@ -166,5 +166,22 @@ package timeline.core
 
 			if (elements.indexOf(elements) < 0) elements.push(element);
 		}
+
+		/**
+		 * 克隆elements
+		 */
+		public function cloneElements() : Vector.<Element>
+		{
+			var eles : Vector.<Element>;
+			if (elements)
+			{
+				eles = new Vector.<Element>();
+				for (var i : int = 0; i < elements.length; i++)
+				{
+					eles.push(elements[i].clone());
+				}
+			}
+			return eles;
+		}
 	}
 }

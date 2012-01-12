@@ -104,14 +104,22 @@ package timeline.view
 			var preKeyframe : Frame = layer.getPreKeyframe(frameIndex);
 			if (!frame.hasElement() && preKeyframe && preKeyframe.elements)
 			{
-				layer.setFrameProperty("elements", preKeyframe.elements, frame.startFrame, frame.startFrame + frame.duration);
+				var eles : Vector.<Element> = preKeyframe.cloneElements();
+				// TEST:
+				for each (var ele : Element in eles)
+				{
+					ele.scaleX = ele.scaleY = 2;
+				}
+				// ------
+				layer.setFrameProperty("elements", eles, frame.startFrame, frame.startFrame + frame.duration);
 			}
 			else
 			{
-				//
+				// TEST
 				var logo : Sprite = this.skin.getSkinInstance("logo_ui");
 				element = new Element(logo);
 				layer.addElement(frameIndex, element);
+				// ----
 			}
 
 			this.callViews('onAddElement', layerIndex, frameIndex, element);
@@ -217,6 +225,13 @@ package timeline.view
 				var start : int = selection[i + 1];
 				var end : int = selection[i + 2];
 				layer.convertToKeyframes(start, end);
+				// TEST
+				if (layer.getFrame(start).hasElement())
+				{
+					var ele : Element = layer.getFrame(start).elements[0];
+					ele.scaleX = ele.scaleY = Math.random() * 4 + .5;
+				}
+				// ----
 			}
 
 			this.callViews('onConvertSelectionKeyframes');

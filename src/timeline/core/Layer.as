@@ -412,51 +412,6 @@ package timeline.core
 		}
 
 		/**
-		 * 核心函数:把帧转化成关键帧, 在convertToKeyframes, 和convertToBlankKeyframes调用
-		 * @param startFrameIndex		起始帧
-		 * @param endFrameIndex			结束帧(但不包括此值)
-		 * @param clearFrameContent		是否清除关键的内容, 即是不是空白关键帧
-		 */
-		private function coreConvertToKeyframes(startFrameIndex : int, endFrameIndex : int, clearFrameContent : Boolean = false) : void
-		{
-			// if (startFrameIndex >= endFrameIndex) endFrameIndex = startFrameIndex + 1;
-
-			var toConvertFrame : Frame, preKeyframe : Frame, nextFrame : Frame;
-			var frameIndex : int, frame : Frame;
-			var duration : int;
-
-			if (startFrameIndex >= 1)
-			{
-				// 把现有帧数扩展到endFrame
-				if (endFrameIndex >= frameCount) this.appendsToFrameIndex(endFrameIndex);
-
-				// 设置startFrame之前
-				preKeyframe = this.frames[this.frames[startFrameIndex - 1].startFrame];
-				duration = startFrameIndex - preKeyframe.startFrame;
-				this.setFrameProperty("duration", duration, preKeyframe.startFrame, startFrameIndex);
-			}
-
-			// 转化startFrame-endFrame
-			for (frameIndex = startFrameIndex; frameIndex < endFrameIndex; frameIndex++)
-			{
-				toConvertFrame = this.frames[frameIndex];
-				toConvertFrame.startFrame = frameIndex;
-				toConvertFrame.duration = 1;
-				if (clearFrameContent) toConvertFrame.clearContent();
-			}
-
-			// 转化endFrame
-			if (endFrameIndex < this.frameCount)
-			{
-				nextFrame = this.frames[endFrameIndex];
-				duration = nextFrame.duration - (endFrameIndex - nextFrame.startFrame);
-				var end : int = nextFrame.startFrame + nextFrame.duration;
-				this.setFrameProperty("duration", duration, endFrameIndex, end);
-				this.setFrameProperty("startFrame", endFrameIndex, endFrameIndex, end);
-			}
-		}
-
-		/**
 		 * 将当前图层中的某个范围内的帧转换成关键帧（如果没有指定帧，则转换所选范围内的帧）。
 		 * @param startFrameIndex	 一个从零开始的索引，它指定要转换成关键帧的起始帧。如果省略 startFrameIndex，则该方法转换当前选定的帧。此参数是可选的。
 		 * @param endFrameIndex	 一个从零开始的索引，它指定将停止转换成关键帧时的帧位置。要转换的帧范围的终点为 endFrameIndex（但不包括此值）。如果您只指定 startFrameIndex，则 endFrameIndex 默认为 startFrameIndex 的值。此参数是可选的。
@@ -473,7 +428,7 @@ package timeline.core
 			{
 				this.coreInsertKeyframe(frameIndex, false);
 			}
-//			this.coreConvertToKeyframes(startFrameIndex, endFrameIndex);
+			// this.coreConvertToKeyframes(startFrameIndex, endFrameIndex);
 		}
 
 		/**
@@ -603,7 +558,7 @@ package timeline.core
 		 */
 		public function coreInsertKeyframe(frameNumIndex : int, blank : Boolean = false) : void
 		{
-			var preKeyframe : Frame, nextFrame : Frame;
+			var preKeyframe : Frame, toConvertFrame : Frame;
 			var duration : int;
 
 			if (frameNumIndex >= frameCount)
@@ -633,21 +588,21 @@ package timeline.core
 				// 修改之后的帧
 				if (frameNumIndex < frameCount)
 				{
-					nextFrame = this.frames[frameNumIndex];
-					duration = nextFrame.startFrame + nextFrame.duration - frameNumIndex;
+					toConvertFrame = this.frames[frameNumIndex];
+					duration = toConvertFrame.startFrame + toConvertFrame.duration - frameNumIndex;
 
-					var endFrameIndex : int = nextFrame.startFrame + nextFrame.duration;
+					var endFrameIndex : int = toConvertFrame.startFrame + toConvertFrame.duration;
 					this.setFrameProperty("duration", duration, frameNumIndex, endFrameIndex);
 					this.setFrameProperty("startFrame", frameNumIndex, frameNumIndex, endFrameIndex);
-					if (blank) this.setFrameProperty("elements", null, frameNumIndex, endFrameIndex);
+					if (blank)
+					{
+						this.setFrameProperty("elements", null, frameNumIndex, endFrameIndex);
+					}
+					else
+					{
+						this.setFrameProperty("elements", toConvertFrame.cloneElements(), frameNumIndex, endFrameIndex);
+					}
 				}
-
-				// 插入关键帧
-				// toConvertFrame = new Frame();
-				// toConvertFrame.startFrame = frameNumIndex;
-				// toConvertFrame.duration = 1;
-				// if (!blank) toConvertFrame.elements = preKeyframe.elements;
-				// this.frames.splice(frameNumIndex, 0, toConvertFrame);
 			}
 		}
 

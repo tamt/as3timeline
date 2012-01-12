@@ -1,5 +1,10 @@
 package timeline.view
 {
+	import flash.geom.Matrix;
+
+	import timeline.enums.EnumTweenType;
+
+	import flash.display.DisplayObjectContainer;
 	import flash.display.DisplayObject;
 
 	import timeline.core.elements.Element;
@@ -45,6 +50,7 @@ package timeline.view
 			// 繪製
 			var layer : Layer;
 			var frame : Frame;
+			var nextKeyframe : Frame;
 			for (var i : int = 0; i < this.mediator.timeline.layers.length; i++)
 			{
 				layer = this.mediator.timeline.layers[i];
@@ -52,14 +58,32 @@ package timeline.view
 
 				var container : Sprite = new Sprite();
 				canvas.addChild(container);
+
 				if (frame && frame.hasElement())
 				{
+					nextKeyframe = layer.getFrame(frame.startFrame + frame.duration);
 					for (var j : int = 0; j < frame.elements.length; j++)
 					{
 						var element : Element = frame.elements[j];
 
 						var dp : DisplayObject = element.dp;
-						dp.transform.matrix = element.matrix;
+						if (frame.tweenType == EnumTweenType.MOTION || frame.tweenType == EnumTweenType.SHAPE)
+						{
+							if (nextKeyframe && nextKeyframe.hasElement() && Util.compareElements(frame.elements, nextKeyframe.elements))
+							{
+								var toMatrix : Matrix = nextKeyframe.elements[0].matrix;
+								var mx : Matrix = Util.getTweenMatrix(element.matrix, toMatrix, frame.duration, this.mediator.timeline.currentFrame - frame.startFrame);
+								dp.transform.matrix = mx;
+							}
+							else
+							{
+								dp.transform.matrix = element.matrix;
+							}
+						}
+						else
+						{
+							dp.transform.matrix = element.matrix;
+						}
 						container.addChild(dp);
 					}
 				}
@@ -105,6 +129,7 @@ package timeline.view
 
 		public function onConvertSelectionKeyframes() : void
 		{
+			this.render();
 		}
 
 		public function onDeleteSelectionFrames() : void

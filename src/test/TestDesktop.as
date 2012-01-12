@@ -51,9 +51,12 @@ package test
 			timeline = new Timeline();
 
 			this.addTimelineLayer();
-//			this.addTimelineLayer();
-//			this.addTimelineLayer();
-//			this.addTimelineLayer();
+			this.addTimelineLayer();
+			this.addTimelineLayer();
+			this.addTimelineLayer();
+			this.addTimelineLayer();
+			this.addTimelineLayer();
+			this.addTimelineLayer();
 
 			mediator = new TimelineMediator(timeline);
 			mediator.skin = skinLib;
@@ -85,8 +88,8 @@ package test
 			ele.x = this.stage.stageWidth / 2 + 100 - Math.random() * 200;
 			ele.y = (this.stage.stageHeight - 276) / 2;
 
-//			layer.addElement(layer.frameCount * Math.random(), ele);
-			layer.addElement(0, ele);
+			layer.addElement(layer.frameCount * Math.random(), ele);
+//			layer.addElement(0, ele);
 		}
 	}
 }
