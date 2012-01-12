@@ -118,6 +118,8 @@ package timeline.view
 				// TEST
 				var logo : Sprite = this.skin.getSkinInstance("logo_ui");
 				element = new Element(logo);
+				element.x = 600 - Math.random() * 200;
+				element.y = (480 - 276) / 2;
 				layer.addElement(frameIndex, element);
 				// ----
 			}
@@ -337,5 +339,7 @@ package timeline.view
 
 			this.callViews('onRemoveMotionTween');
 		}
+		
+		
 	}
 }

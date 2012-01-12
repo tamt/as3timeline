@@ -1,10 +1,16 @@
 package timeline.core
 {
-	import timeline.enums.EnumTweenType;
+	import flash.display.Sprite;
+
 	import timeline.core.elements.Element;
 	import timeline.enums.EnumLayerType;
+	import timeline.enums.EnumTweenType;
 	import timeline.enums.validator.EnumsValidator;
 	import timeline.util.Util;
+
+	import flash.display.DisplayObject;
+	import flash.display.DisplayObjectContainer;
+	import flash.geom.Matrix;
 
 	/**
 	 * Layer 对象表示时间轴中的图层。timeline.layers 属性包含 Layer 对象的数组，fl.getDocumentDOM().getTimeline().layers 可以访问这些对象。 
@@ -834,21 +840,30 @@ package timeline.core
 		 */
 		public function createMotionTween(startFrameIndex : int, endFrameIndex : int) : void
 		{
-			if (endFrameIndex <= startFrameIndex) endFrameIndex = startFrameIndex + 1;
-			var keyframe : Frame;
-			keyframe = this.frames[this.frames[startFrameIndex].startFrame];
-			if (keyframe.hasElement())
+			this.setMotionTween(EnumTweenType.MOTION, startFrameIndex, endFrameIndex);
+		}
+
+		private function setMotionTween(tweenType : String, startFrameIndex : int, endFrameIndex : int) : void
+		{
+			if (EnumsValidator.validate(EnumTweenType, tweenType))
 			{
-				while (Util.extentIntersection(keyframe.startFrame, keyframe.startFrame + keyframe.duration, startFrameIndex, endFrameIndex))
+				if (endFrameIndex <= startFrameIndex) endFrameIndex = startFrameIndex + 1;
+				var keyframe : Frame;
+				keyframe = this.frames[this.frames[startFrameIndex].startFrame];
+				if (keyframe.hasElement())
 				{
-					this.setFrameProperty("tweenType", EnumTweenType.MOTION, keyframe.startFrame, keyframe.startFrame + keyframe.duration);
-					if (keyframe.startFrame + keyframe.duration < this.frameCount)
+					while (Util.extentIntersection(keyframe.startFrame, keyframe.startFrame + keyframe.duration, startFrameIndex, endFrameIndex))
 					{
-						keyframe = this.frames[this.frames[keyframe.startFrame + keyframe.duration].startFrame];
-					}
-					else
-					{
-						break;
+						this.setFrameProperty("tweenType", tweenType, keyframe.startFrame, keyframe.startFrame + keyframe.duration);
+
+						if (keyframe.startFrame + keyframe.duration < this.frameCount)
+						{
+							keyframe = this.frames[this.frames[keyframe.startFrame + keyframe.duration].startFrame];
+						}
+						else
+						{
+							break;
+						}
 					}
 				}
 			}
@@ -859,24 +874,7 @@ package timeline.core
 		 */
 		public function removeMotionTween(startFrameIndex : int, endFrameIndex : int) : void
 		{
-			if (endFrameIndex <= startFrameIndex) endFrameIndex = startFrameIndex + 1;
-			var keyframe : Frame;
-			keyframe = this.frames[this.frames[startFrameIndex].startFrame];
-			if (keyframe.hasElement())
-			{
-				while (Util.extentIntersection(keyframe.startFrame, keyframe.startFrame + keyframe.duration, startFrameIndex, endFrameIndex))
-				{
-					this.setFrameProperty("tweenType", EnumTweenType.NONE, keyframe.startFrame, keyframe.startFrame + keyframe.duration);
-					if (keyframe.startFrame + keyframe.duration < this.frameCount)
-					{
-						keyframe = this.frames[this.frames[keyframe.startFrame + keyframe.duration].startFrame];
-					}
-					else
-					{
-						break;
-					}
-				}
-			}
+			this.setMotionTween(EnumTweenType.NONE, startFrameIndex, endFrameIndex);
 		}
 
 		/**
@@ -922,6 +920,54 @@ package timeline.core
 				return this.frames[this.frames[frame.startFrame - 1].startFrame];
 			}
 			return null;
+		}
+
+		/**
+		 * 把某一帧渲染到Container上
+		 */
+		public function renderOn(frameIndex : int, container : DisplayObjectContainer) : void
+		{
+			if (frameIndex >= this.frameCount) return;
+
+			var frame : Frame = this.getFrame(frameIndex);
+			if (!frame.hasElement()) return;
+			
+			var nextKeyframe : Frame = this.getFrame(frame.startFrame + frame.duration);
+
+			for (var j : int = 0; j < frame.elements.length; j++)
+			{
+				var element : Element = frame.elements[j];
+
+				var dp : DisplayObject = element.dp;
+				if (frame.tweenType == EnumTweenType.MOTION || frame.tweenType == EnumTweenType.SHAPE)
+				{
+					if (nextKeyframe && nextKeyframe.hasElement() && Util.compareElements(frame.elements, nextKeyframe.elements))
+					{
+						var toMatrix : Matrix = nextKeyframe.elements[0].matrix;
+						var mx : Matrix = Util.getTweenMatrix(element.matrix, toMatrix, frame.duration, frameIndex - frame.startFrame);
+						dp.transform.matrix = mx;
+					}
+					else
+					{
+						dp.transform.matrix = element.matrix;
+					}
+				}
+				else
+				{
+					dp.transform.matrix = element.matrix;
+				}
+				container.addChild(dp);
+			}
+		}
+
+		/**
+		 * 返回渲染数据
+		 */
+		public function getPresentData(frameIndex : int) : DisplayObject
+		{
+			var sp : Sprite = new Sprite();
+			this.renderOn(frameIndex, sp);
+			return sp;
 		}
 	}
 }

@@ -1,16 +1,7 @@
 package timeline.view
 {
-	import flash.geom.Matrix;
-
-	import timeline.enums.EnumTweenType;
-
-	import flash.display.DisplayObjectContainer;
-	import flash.display.DisplayObject;
-
-	import timeline.core.elements.Element;
-	import timeline.core.Frame;
-	import timeline.util.Util;
 	import timeline.core.Layer;
+	import timeline.util.Util;
 	import timeline.view.interfaces.ITimelineView;
 
 	import flash.display.Sprite;
@@ -49,44 +40,11 @@ package timeline.view
 
 			// 繪製
 			var layer : Layer;
-			var frame : Frame;
-			var nextKeyframe : Frame;
+			var currentFrameIndex : int = this.mediator.timeline.currentFrame;
 			for (var i : int = 0; i < this.mediator.timeline.layers.length; i++)
 			{
 				layer = this.mediator.timeline.layers[i];
-				frame = layer.getFrame(this.mediator.timeline.currentFrame);
-
-				var container : Sprite = new Sprite();
-				canvas.addChild(container);
-
-				if (frame && frame.hasElement())
-				{
-					nextKeyframe = layer.getFrame(frame.startFrame + frame.duration);
-					for (var j : int = 0; j < frame.elements.length; j++)
-					{
-						var element : Element = frame.elements[j];
-
-						var dp : DisplayObject = element.dp;
-						if (frame.tweenType == EnumTweenType.MOTION || frame.tweenType == EnumTweenType.SHAPE)
-						{
-							if (nextKeyframe && nextKeyframe.hasElement() && Util.compareElements(frame.elements, nextKeyframe.elements))
-							{
-								var toMatrix : Matrix = nextKeyframe.elements[0].matrix;
-								var mx : Matrix = Util.getTweenMatrix(element.matrix, toMatrix, frame.duration, this.mediator.timeline.currentFrame - frame.startFrame);
-								dp.transform.matrix = mx;
-							}
-							else
-							{
-								dp.transform.matrix = element.matrix;
-							}
-						}
-						else
-						{
-							dp.transform.matrix = element.matrix;
-						}
-						container.addChild(dp);
-					}
-				}
+				canvas.addChild(layer.getPresentData(currentFrameIndex));
 			}
 		}
 

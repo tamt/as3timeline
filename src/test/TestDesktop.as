@@ -54,9 +54,8 @@ package test
 			this.addTimelineLayer();
 			this.addTimelineLayer();
 			this.addTimelineLayer();
-			this.addTimelineLayer();
-			this.addTimelineLayer();
-			this.addTimelineLayer();
+
+			this.addTweenLayer();
 
 			mediator = new TimelineMediator(timeline);
 			mediator.skin = skinLib;
@@ -67,6 +66,28 @@ package test
 
 			view = new TimelineView(mediator);
 			addChild(view.ui);
+		}
+
+		private function addTweenLayer() : void
+		{
+			timeline.addNewLayer();
+			timeline.currentLayer = timeline.layerCount - 1;
+			var layer : Layer = timeline.layers[timeline.layerCount - 1];
+			layer.appendsToFrameIndex(8);
+
+			var dp : Sprite = new Sprite();
+			dp.graphics.lineStyle(1, Math.random() * 0xffffff, 1);
+			dp.graphics.beginFill(Math.random() * 0xffffff, Math.random() * .7 + .3);
+			var w : Number = Math.random() * 50 + 5;
+			var h : Number = Math.random() * 50 + 5;
+			dp.graphics.drawRect(-w / 2, -h / 2, w, h);
+			dp.graphics.endFill();
+
+			var ele : Element = new Element(dp);
+			ele.x = this.stage.stageWidth / 2 + 100 - Math.random() * 200;
+			ele.y = (this.stage.stageHeight - 276) / 2 + 50 - Math.random() * 100;
+
+			layer.addElement(0, ele);
 		}
 
 		private function addTimelineLayer() : void
@@ -80,16 +101,17 @@ package test
 
 			var dp : Sprite = new Sprite();
 			dp.graphics.lineStyle(1, Math.random() * 0xffffff, 1);
-			dp.graphics.beginFill(Math.random() * 0xffffff);
+			dp.graphics.beginFill(Math.random() * 0xffffff, Math.random() * .7 + .3);
 			dp.graphics.drawCircle(0, 0, Math.random() * 20 + 5);
+			// dp.graphics.drawRect(0, 0, Math.random() * 50 + 5, Math.random() * 50 + 5);
 			dp.graphics.endFill();
 
 			var ele : Element = new Element(dp);
 			ele.x = this.stage.stageWidth / 2 + 100 - Math.random() * 200;
-			ele.y = (this.stage.stageHeight - 276) / 2;
+			ele.y = (this.stage.stageHeight - 276) / 2 + 50 - Math.random() * 100;
 
 			layer.addElement(layer.frameCount * Math.random(), ele);
-//			layer.addElement(0, ele);
+			// layer.addElement(0, ele);
 		}
 	}
 }
